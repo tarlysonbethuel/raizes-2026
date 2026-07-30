@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acampamento Raízes 2026</title>
+    
+    <!-- === ADICIONE ESTA LINHA AQUI PARA O FAVICON === -->
+    <link rel="icon" href="icone.png" type="image/png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- PALETA DE CORES --- */
+        :root {
+            --cor-laranja: #ca6504;
+            --cor-verde: #111111; 
+            --cor-verde-escuro: #000000; 
+            --cor-branco: #d8cfc2;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body, html {
+            height: 100%;
+            width: 100%;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--cor-verde-escuro);
+            overflow: hidden;
+            color: var(--cor-branco);
+        }
+
+        /* --- CONFIGURAÇÃO DO CANVAS 3D (FUNDO LÍQUIDO) --- */
+        #webGLApp {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0; 
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Overlay escuro para leitura */
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 20%, #000000 100%);
+            z-index: 1; 
+            pointer-events: none;
+        }
+
+        /* --- CONTEÚDO PRINCIPAL --- */
+        .main-content {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            z-index: 2; 
+            padding: 20px;
+            transition: filter 0.3s ease;
+        }
+
+        .hero-logo {
+            max-width: 80vw;
+            width: 500px;
+            height: auto;
+            margin-bottom: 20px;
+            filter: drop-shadow(0px 5px 10px rgba(0, 0, 0, 0.8));
+            opacity: 0;
+            animation: fadeInUp 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            animation-delay: 0.2s;
+        }
+
+        .subtitle {
+            font-size: clamp(1rem, 3vw, 1.5rem);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            margin-bottom: 40px;
+            color: var(--cor-branco);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            opacity: 0;
+            animation: fadeInUp 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            animation-delay: 0.5s;
+        }
+
+        .btn-container {
+            display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;
+            opacity: 0;
+            animation: fadeInUp 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            animation-delay: 0.8s;
+        }
+
+        .btn {
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--cor-branco);
+            border: 2px solid var(--cor-branco);
+            padding: 15px 40px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(5px);
+        }
+
+        .btn:hover {
+            background-color: var(--cor-laranja);
+            border-color: var(--cor-laranja);
+            color: var(--cor-branco);
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(202, 101, 4, 0.6);
+        }
+
+        .countdown {
+            margin-top: 30px;
+            font-family: 'Anton', sans-serif;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            color: var(--cor-branco);
+            opacity: 0;
+            animation: fadeInUp 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            animation-delay: 1.1s;
+        }
+
+        .footer {
+            position: absolute; bottom: 20px; font-size: 0.7rem; opacity: 0.6; letter-spacing: 1px; color: var(--cor-branco);
+        }
+
+        /* --- MODAIS --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.95); 
+            z-index: 1000;
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.4s ease;
+            padding: 20px;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+        
+        .modal-box {
+            background: var(--cor-verde); border: 2px solid var(--cor-laranja);
+            max-width: 700px; width: 100%; padding: 40px; text-align: center;
+            position: relative; box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            transform: scale(0.9); transition: transform 0.4s ease;
+        }
+        .modal-overlay.active .modal-box { transform: scale(1); }
+
+        .video-box {
+            padding: 15px; 
+            background: #000;
+            max-width: 800px;
+        }
+        video {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .close-btn { position: absolute; top: 15px; right: 20px; background: none; border: none; color: var(--cor-branco); font-size: 2rem; cursor: pointer; transition: color 0.3s; z-index: 10; }
+        .close-btn:hover { color: var(--cor-laranja); }
+        .close-btn-video { color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.8); } 
+    </style>
+</head>
+<body>
+
+    <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+
+    <div class="overlay"></div>
+
+    <div class="main-content" id="mainContent">
+        <img src="LOGO - RAÍZES - 2026.png" alt="Logo Raízes 2026" class="hero-logo">
+        <div class="subtitle">12 & 13 DE OUTUBRO DE 2026</div>
+        
+        <div class="btn-container">
+            <a href="https://forms.gle/CWD5D84exGNGRzM6A" target="_blank" class="btn" id="btnInscrever">Inscrever-se</a>
+            <a href="#" class="btn" id="btnTrailer">Ver Trailer</a>
+        </div>
+        
+        <div class="countdown" id="timer"></div>
+        <div class="footer">© 2026 JOVENS DA IGREJA CASA DE ORAÇÃO DE JARU/RO. TODOS OS DIREITOS RESERVADOS.</div>
+    </div>
+
+    <!-- MODAL DO VÍDEO -->
+    <div class="modal-overlay" id="videoModal">
+        <div class="modal-box video-box">
+            <button class="close-btn close-btn-video" id="closeVideoModal">&times;</button>
+            <video id="trailerVideo" controls>
+                <source src="trailer.mp4" type="video/mp4">
+                Seu navegador não suporta a exibição deste vídeo.
+            </video>
+        </div>
+    </div>
+
+    <script>
+        // CONTADOR
+        const eventDate = new Date("October 11, 2026 00:00:00").getTime();
+        const x = setInterval(function() {
+            const now = new Date().getTime();
+            const distance = eventDate - now;
+            
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            
+            // --- NOVA LINHA PARA CALCULAR OS SEGUNDOS ---
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            
+            // --- LINHA ATUALIZADA PARA EXIBIR OS SEGUNDOS ( + seconds + "S") ---
+            document.getElementById("timer").innerHTML = days + "D " + hours + "H " + minutes + "M " + seconds + "S";
+            
+            if (distance < 0) { 
+                clearInterval(x); 
+                document.getElementById("timer").innerHTML = "O ACAMPAMENTO COMEÇOU"; 
+            }
+        }, 1000);
+        
+
+        // LÓGICA DO VÍDEO NO MODAL
+        const btnTrailer = document.getElementById('btnTrailer');
+        const videoModal = document.getElementById('videoModal');
+        const closeVideoModal = document.getElementById('closeVideoModal');
+        const trailerVideo = document.getElementById('trailerVideo');
+        const mainContent = document.getElementById('mainContent');
+
+        btnTrailer.addEventListener('click', (e) => { 
+            e.preventDefault(); 
+            videoModal.classList.add('active'); 
+            mainContent.style.filter = "blur(5px)"; 
+            trailerVideo.play(); 
+        });
+
+        function fecharVideo() {
+            videoModal.classList.remove('active'); 
+            mainContent.style.filter = "none";
+            trailerVideo.pause(); 
+            trailerVideo.currentTime = 0; 
+        }
+
+        closeVideoModal.addEventListener('click', fecharVideo);
+        
+        videoModal.addEventListener('click', (e) => { 
+            if (e.target === videoModal) fecharVideo(); 
+        });
+    </script>
+
+    <!-- SCRIPTS WEBGL (EFEITOS DE FUNDO) -->
+    <script>
+        class TouchTexture {
+            constructor() {
+                this.size = 64;
+                this.width = this.height = this.size;
+                this.maxAge = 64;
+                this.radius = 0.25 * this.size; 
+                this.speed = 1 / this.maxAge;
+                this.trail = [];
+                this.last = null;
+                this.initTexture();
+            }
+            initTexture() {
+                this.canvas = document.createElement("canvas");
+                this.canvas.width = this.width;
+                this.canvas.height = this.height;
+                this.ctx = this.canvas.getContext("2d");
+                this.ctx.fillStyle = "black";
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                this.texture = new THREE.Texture(this.canvas);
+            }
+            update() {
+                this.clear();
+                let speed = this.speed;
+                for (let i = this.trail.length - 1; i >= 0; i--) {
+                    const point = this.trail[i];
+                    let f = point.force * speed * (1 - point.age / this.maxAge);
+                    point.x += point.vx * f;
+                    point.y += point.vy * f;
+                    point.age++;
+                    if (point.age > this.maxAge) {
+                        this.trail.splice(i, 1);
+                    } else {
+                        this.drawPoint(point);
+                    }
+                }
+                this.texture.needsUpdate = true;
+            }
+            clear() {
+                this.ctx.fillStyle = "black";
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+            addTouch(point) {
+                let force = 0;
+                let vx = 0;
+                let vy = 0;
+                const last = this.last;
+                if (last) {
+                    const dx = point.x - last.x;
+                    const dy = point.y - last.y;
+                    if (dx === 0 && dy === 0) return;
+                    const dd = dx * dx + dy * dy;
+                    let d = Math.sqrt(dd);
+                    vx = dx / d;
+                    vy = dy / d;
+                    force = Math.min(dd * 20000, 2.0); 
+                }
+                this.last = { x: point.x, y: point.y };
+                this.trail.push({ x: point.x, y: point.y, age: 0, force, vx, vy });
+            }
+            drawPoint(point) {
+                const pos = { x: point.x * this.width, y: (1 - point.y) * this.height };
+                let intensity = 1;
+                if (point.age < this.maxAge * 0.3) {
+                    intensity = Math.sin((point.age / (this.maxAge * 0.3)) * (Math.PI / 2));
+                } else {
+                    const t = 1 - (point.age - this.maxAge * 0.3) / (this.maxAge * 0.7);
+                    intensity = -t * (t - 2);
+                }
+                intensity *= point.force;
+                const radius = this.radius;
+                let color = `${((point.vx + 1) / 2) * 255}, ${((point.vy + 1) / 2) * 255}, ${intensity * 255}`;
+                let offset = this.size * 5;
+                this.ctx.shadowOffsetX = offset;
+                this.ctx.shadowOffsetY = offset;
+                this.ctx.shadowBlur = radius * 1;
+                this.ctx.shadowColor = `rgba(${color},${0.2 * intensity})`;
+                this.ctx.beginPath();
+                this.ctx.fillStyle = "rgba(255,0,0,1)";
+                this.ctx.arc(pos.x - offset, pos.y - offset, radius, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+        }
+
+        class GradientBackground {
+            constructor(sceneManager) {
+                this.sceneManager = sceneManager;
+                this.mesh = null;
+                
+                this.uniforms = {
+                    uTime: { value: 0 },
+                    uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+                    
+                    uColor1: { value: new THREE.Vector3(0.0, 0.0, 0.0) },
+                    uColor2: { value: new THREE.Vector3(0.35, 0.32, 0.281) }, 
+                    uColor3: { value: new THREE.Vector3(0.0, 0.0, 0.0) }, 
+                    
+                    // --- BRANCO/BEGE MAIS SUAVE ---
+                    uColor4: { value: new THREE.Vector3(0.35, 0.32, 0.28) }, 
+                    
+                    uColor5: { value: new THREE.Vector3(0.0, 0.0, 0.0) }, 
+                    uColor6: { value: new THREE.Vector3(0.35, 0.32, 0.28) }, 
+                    
+                    uSpeed: { value: 0.5 },
+                    uIntensity: { value: 1.0 }, 
+                    uTouchTexture: { value: null },
+                    uGrainIntensity: { value: 0.05 },
+                    uZoom: { value: 1.0 },
+                    
+                    uDarkNavy: { value: new THREE.Vector3(0.0, 0.0, 0.0) }, 
+                    
+                    uGradientSize: { value: 1.0 },
+                    uGradientCount: { value: 6.0 },
+                    uColor1Weight: { value: 1.0 },
+                    uColor2Weight: { value: 1.0 }
+                };
+            }
+            init() {
+                const viewSize = this.sceneManager.getViewSize();
+                const geometry = new THREE.PlaneGeometry(viewSize.width, viewSize.height, 1, 1);
+                
+                const material = new THREE.ShaderMaterial({
+                    uniforms: this.uniforms,
+                    vertexShader: `
+                        varying vec2 vUv;
+                        void main() {
+                            vec3 pos = position.xyz;
+                            gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.);
+                            vUv = uv;
+                        }
+                    `,
+                    fragmentShader: `
+                        uniform float uTime;
+                        uniform vec2 uResolution;
+                        uniform vec3 uColor1; uniform vec3 uColor2; uniform vec3 uColor3;
+                        uniform vec3 uColor4; uniform vec3 uColor5; uniform vec3 uColor6;
+                        uniform float uSpeed; uniform float uIntensity;
+                        uniform sampler2D uTouchTexture; uniform float uGrainIntensity;
+                        uniform vec3 uDarkNavy; uniform float uGradientSize;
+                        uniform float uGradientCount; uniform float uColor1Weight; uniform float uColor2Weight;
+                        varying vec2 vUv;
+                        
+                        float grain(vec2 uv, float time) {
+                            vec2 grainUv = uv * uResolution * 0.5;
+                            float grainValue = fract(sin(dot(grainUv + time, vec2(12.9898, 78.233))) * 43758.5453);
+                            return grainValue * 2.0 - 1.0;
+                        }
+                        
+                        vec3 getGradientColor(vec2 uv, float time) {
+                            float gradientRadius = uGradientSize;
+                            vec2 center1 = vec2(0.5 + sin(time * uSpeed * 0.4) * 0.4, 0.5 + cos(time * uSpeed * 0.5) * 0.4);
+                            vec2 center2 = vec2(0.5 + cos(time * uSpeed * 0.6) * 0.5, 0.5 + sin(time * uSpeed * 0.45) * 0.5);
+                            vec2 center3 = vec2(0.5 + sin(time * uSpeed * 0.35) * 0.45, 0.5 + cos(time * uSpeed * 0.55) * 0.45);
+                            vec2 center4 = vec2(0.5 + cos(time * uSpeed * 0.5) * 0.4, 0.5 + sin(time * uSpeed * 0.4) * 0.4);
+                            vec2 center5 = vec2(0.5 + sin(time * uSpeed * 0.7) * 0.35, 0.5 + cos(time * uSpeed * 0.6) * 0.35);
+                            vec2 center6 = vec2(0.5 + cos(time * uSpeed * 0.45) * 0.5, 0.5 + sin(time * uSpeed * 0.65) * 0.5);
+                            
+                            float dist1 = length(uv - center1); float dist2 = length(uv - center2);
+                            float dist3 = length(uv - center3); float dist4 = length(uv - center4);
+                            float dist5 = length(uv - center5); float dist6 = length(uv - center6);
+                            
+                            float influence1 = 1.0 - smoothstep(0.0, gradientRadius, dist1);
+                            float influence2 = 1.0 - smoothstep(0.0, gradientRadius, dist2);
+                            float influence3 = 1.0 - smoothstep(0.0, gradientRadius, dist3);
+                            float influence4 = 1.0 - smoothstep(0.0, gradientRadius, dist4);
+                            float influence5 = 1.0 - smoothstep(0.0, gradientRadius, dist5);
+                            float influence6 = 1.0 - smoothstep(0.0, gradientRadius, dist6);
+                            
+                            vec3 color = vec3(0.0);
+                            color += uColor1 * influence1 * (0.55 + 0.45 * sin(time * uSpeed)) * uColor1Weight;
+                            color += uColor2 * influence2 * (0.55 + 0.45 * cos(time * uSpeed * 1.2)) * uColor2Weight;
+                            color += uColor3 * influence3 * (0.55 + 0.45 * sin(time * uSpeed * 0.8)) * uColor1Weight;
+                            color += uColor4 * influence4 * (0.55 + 0.45 * cos(time * uSpeed * 1.3)) * uColor2Weight;
+                            color += uColor5 * influence5 * (0.55 + 0.45 * sin(time * uSpeed * 1.1)) * uColor1Weight;
+                            color += uColor6 * influence6 * (0.55 + 0.45 * cos(time * uSpeed * 0.9)) * uColor2Weight;
+                            
+                            color = clamp(color, vec3(0.0), vec3(1.0)) * uIntensity;
+                            float luminance = dot(color, vec3(0.299, 0.587, 0.114));
+                            color = mix(vec3(luminance), color, 1.35);
+                            color = pow(color, vec3(0.92));
+                            
+                            float brightness = length(color);
+                            float mixFactor = max(brightness * 1.2, 0.15);
+                            color = mix(uDarkNavy, color, mixFactor);
+                            
+                            return color;
+                        }
+
+                        void main() {
+                            vec2 uv = vUv;
+                            vec4 touchTex = texture2D(uTouchTexture, uv);
+                            float vx = -(touchTex.r * 2.0 - 1.0);
+                            float vy = -(touchTex.g * 2.0 - 1.0);
+                            float intensity = touchTex.b;
+                            
+                            uv.x += vx * 0.8 * intensity;
+                            uv.y += vy * 0.8 * intensity;
+                            
+                            vec3 color = getGradientColor(uv, uTime);
+                            float grainValue = grain(uv, uTime);
+                            color += grainValue * uGrainIntensity;
+                            
+                            gl_FragColor = vec4(color, 1.0);
+                        }
+                    `
+                });
+                this.mesh = new THREE.Mesh(geometry, material);
+                this.sceneManager.scene.add(this.mesh);
+            }
+            update(delta) {
+                if (this.uniforms.uTime) this.uniforms.uTime.value += delta;
+            }
+            onResize(width, height) {
+                const viewSize = this.sceneManager.getViewSize();
+                if (this.mesh) {
+                    this.mesh.geometry.dispose();
+                    this.mesh.geometry = new THREE.PlaneGeometry(viewSize.width, viewSize.height, 1, 1);
+                }
+                if (this.uniforms.uResolution) this.uniforms.uResolution.value.set(width, height);
+            }
+        }
+
+        class App {
+            constructor() {
+                this.renderer = new THREE.WebGLRenderer({
+                    antialias: true,
+                    powerPreference: "high-performance",
+                    alpha: false
+                });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                this.renderer.domElement.id = "webGLApp"; 
+                
+                document.body.prepend(this.renderer.domElement);
+
+                this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 10000);
+                this.camera.position.z = 50;
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0x000000); 
+                this.clock = new THREE.Clock();
+
+                this.touchTexture = new TouchTexture();
+                this.gradientBackground = new GradientBackground(this);
+                this.gradientBackground.uniforms.uTouchTexture.value = this.touchTexture.texture;
+
+                this.init();
+            }
+            init() {
+                this.gradientBackground.init();
+                this.tick();
+                window.addEventListener("resize", () => this.onResize());
+                window.addEventListener("mousemove", (ev) => this.onMouseMove(ev));
+                window.addEventListener("touchmove", (ev) => this.onTouchMove(ev));
+            }
+            onTouchMove(ev) {
+                const touch = ev.touches[0];
+                this.onMouseMove({ clientX: touch.clientX, clientY: touch.clientY });
+            }
+            onMouseMove(ev) {
+                this.mouse = { x: ev.clientX / window.innerWidth, y: 1 - ev.clientY / window.innerHeight };
+                this.touchTexture.addTouch(this.mouse);
+            }
+            getViewSize() {
+                const fovInRadians = (this.camera.fov * Math.PI) / 180;
+                const height = Math.abs(this.camera.position.z * Math.tan(fovInRadians / 2) * 2);
+                return { width: height * this.camera.aspect, height };
+            }
+            update(delta) {
+                this.touchTexture.update();
+                this.gradientBackground.update(delta);
+            }
+            render() {
+                const delta = this.clock.getDelta();
+                this.renderer.render(this.scene, this.camera);
+                this.update(Math.min(delta, 0.1));
+            }
+            tick() {
+                this.render();
+                requestAnimationFrame(() => this.tick());
+            }
+            onResize() {
+                this.camera.aspect = window.innerWidth / window.innerHeight;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.gradientBackground.onResize(window.innerWidth, window.innerHeight);
+            }
+        }
+
+        const app = new App();
+    </script>
+</body>
+</html>
