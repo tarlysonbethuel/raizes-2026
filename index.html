@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acampamento Raízes 2026</title>
     
-    <!-- === ADICIONE ESTA LINHA AQUI PARA O FAVICON === -->
+    <!-- Ícone da Aba do Navegador (Favicon) -->
     <link rel="icon" href="icone.png" type="image/png">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -152,25 +152,18 @@
         
         .modal-box {
             background: var(--cor-verde); border: 2px solid var(--cor-laranja);
-            max-width: 700px; width: 100%; padding: 40px; text-align: center;
+            max-width: 800px; width: 100%; padding: 20px; text-align: center;
             position: relative; box-shadow: 0 0 30px rgba(0,0,0,0.8);
             transform: scale(0.9); transition: transform 0.4s ease;
         }
         .modal-overlay.active .modal-box { transform: scale(1); }
 
         .video-box {
-            padding: 15px; 
             background: #000;
-            max-width: 800px;
-        }
-        video {
-            width: 100%;
-            height: auto;
-            border-radius: 4px;
-            outline: none;
+            padding: 30px 15px 15px 15px;
         }
 
-        .close-btn { position: absolute; top: 15px; right: 20px; background: none; border: none; color: var(--cor-branco); font-size: 2rem; cursor: pointer; transition: color 0.3s; z-index: 10; }
+        .close-btn { position: absolute; top: 5px; right: 15px; background: none; border: none; color: var(--cor-branco); font-size: 2rem; cursor: pointer; transition: color 0.3s; z-index: 10; }
         .close-btn:hover { color: var(--cor-laranja); }
         .close-btn-video { color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.8); } 
     </style>
@@ -194,20 +187,25 @@
         <div class="footer">© 2026 JOVENS DA IGREJA CASA DE ORAÇÃO DE JARU/RO. TODOS OS DIREITOS RESERVADOS.</div>
     </div>
 
-    <!-- MODAL DO VÍDEO -->
+    <!-- MODAL DO VÍDEO (YOUTUBE) -->
     <div class="modal-overlay" id="videoModal">
         <div class="modal-box video-box">
             <button class="close-btn close-btn-video" id="closeVideoModal">&times;</button>
-            <video id="trailerVideo" controls>
-                <source src="trailer.mp4" type="video/mp4">
-                Seu navegador não suporta a exibição deste vídeo.
-            </video>
+            <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 4px;">
+                <iframe id="trailerVideo" 
+                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" 
+                        src="" 
+                        title="Trailer Raízes 2026" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen>
+                </iframe>
+            </div>
         </div>
     </div>
 
     <script>
-        // CONTADOR
-        const eventDate = new Date("October 11, 2026 00:00:00").getTime();
+        // CONTADOR COM SEGUNDOS
+        const eventDate = new Date("October 12, 2026 00:00:00").getTime();
         const x = setInterval(function() {
             const now = new Date().getTime();
             const distance = eventDate - now;
@@ -215,11 +213,8 @@
             const days = Math.floor(distance / (1000 * 60 * 60 * 24));
             const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            
-            // --- NOVA LINHA PARA CALCULAR OS SEGUNDOS ---
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
             
-            // --- LINHA ATUALIZADA PARA EXIBIR OS SEGUNDOS ( + seconds + "S") ---
             document.getElementById("timer").innerHTML = days + "D " + hours + "H " + minutes + "M " + seconds + "S";
             
             if (distance < 0) { 
@@ -227,27 +222,27 @@
                 document.getElementById("timer").innerHTML = "O ACAMPAMENTO COMEÇOU"; 
             }
         }, 1000);
-        
 
-        // LÓGICA DO VÍDEO NO MODAL
+        // LÓGICA DO VÍDEO NO MODAL (YOUTUBE)
         const btnTrailer = document.getElementById('btnTrailer');
         const videoModal = document.getElementById('videoModal');
         const closeVideoModal = document.getElementById('closeVideoModal');
         const trailerVideo = document.getElementById('trailerVideo');
         const mainContent = document.getElementById('mainContent');
 
+        const youtubeEmbedUrl = "https://www.youtube.com/embed/k4FVHJbMJvY?autoplay=1";
+
         btnTrailer.addEventListener('click', (e) => { 
             e.preventDefault(); 
             videoModal.classList.add('active'); 
             mainContent.style.filter = "blur(5px)"; 
-            trailerVideo.play(); 
+            trailerVideo.src = youtubeEmbedUrl; 
         });
 
         function fecharVideo() {
             videoModal.classList.remove('active'); 
             mainContent.style.filter = "none";
-            trailerVideo.pause(); 
-            trailerVideo.currentTime = 0; 
+            trailerVideo.src = ""; 
         }
 
         closeVideoModal.addEventListener('click', fecharVideo);
@@ -352,14 +347,13 @@
                     uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
                     
                     uColor1: { value: new THREE.Vector3(0.0, 0.0, 0.0) },
-                    uColor2: { value: new THREE.Vector3(0.35, 0.32, 0.281) }, 
-                    uColor3: { value: new THREE.Vector3(0.0, 0.0, 0.0) }, 
-                    
-                    // --- BRANCO/BEGE MAIS SUAVE ---
-                    uColor4: { value: new THREE.Vector3(0.35, 0.32, 0.28) }, 
-                    
-                    uColor5: { value: new THREE.Vector3(0.0, 0.0, 0.0) }, 
+                    uColor2: { value: new THREE.Vector3(0.35, 0.32, 0.281) },
+                    uColor3: { value: new THREE.Vector3(0.0, 0.0, 0.0) },
+                    uColor4: { value: new THREE.Vector3(0.35, 0.32, 0.28) },
+                    uColor5: { value: new THREE.Vector3(0.0, 0.0, 0.0) },
                     uColor6: { value: new THREE.Vector3(0.35, 0.32, 0.28) }, 
+
+
                     
                     uSpeed: { value: 0.5 },
                     uIntensity: { value: 1.0 }, 
